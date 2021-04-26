@@ -1,11 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from "react-native";
+import { useSelector, useDispatch } from "react-redux"
+import { fetchMoviesAction } from "../Redux/action/index";
+
 export interface Props {
-    
+    navigation: {
+        navigate: (route: string, param?: any) => void
+    }
 }
-const ListofMovies:React.FC<Props> = (props) => {
+const ListofMovies: React.FC<Props> = (props) => {
     const [searchText, setSearchText] = useState("");
     const [list, setList] = useState([{ id: 1 }, { id: 2 }, { id: 3 }])
+
+    const dispatch = useDispatch()
+    let movies = useSelector((state?: any) => state.movieReducer)
+    console.log("MOvies", movies)
+    useEffect(() => {
+        
+        dispatch(fetchMoviesAction());
+        // fetch('https://d9945f1c49f9.ngrok.io/api/getMovies?page[number]=1', {
+        //     method: 'GET'
+        //  })
+        //  .then((response) => response.json())
+        //  .then((responseJson) => {
+        //     console.log(responseJson);
+        //  })
+        //  .catch((error) => {
+        //     console.error(error);
+        //  });
+    }, [])
+
     return (
         <View style={styles.mainView}>
             <View style={styles.inputStyle}>
@@ -32,8 +56,8 @@ const ListofMovies:React.FC<Props> = (props) => {
                         renderItem={({ item, index }) => {
                             return (
                                 <View style={styles.outerContainerStyle}>
-                                    <TouchableOpacity style={styles.itemContainer} 
-                                    onPress={()=>{props.navigation.navigate("MovieDetail")}}>
+                                    <TouchableOpacity style={styles.itemContainer}
+                                        onPress={() => { props.navigation.navigate("MovieDetail", { movieName: "Undisputed" }) }}>
                                         <View style={styles.innerCOntainerStyle}>
                                             <Text style={{ fontSize: 16, marginTop: 10, }}>{"Name"}</Text>
                                             <Text style={{ fontSize: 12, marginTop: 5 }}>{"Votes"}</Text>

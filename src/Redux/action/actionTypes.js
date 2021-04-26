@@ -1,0 +1,3 @@
+export const FETCH_MOVIES="FETCH_MOVIES";
+export const FETCH_SUCCEDED="FETCH_SUCCEDED";
+export const FETCH_FAILED="FETCH_FAILED";
