@@ -1,12 +1,13 @@
-import {FETCH_FAILED, FETCH_MOVIES, FETCH_SUCCEDED} from '../action/index';
+import {FETCH_FAILED, FETCH_SUCCEDED,ARRAY_EMPTY} from '../action/actionTypes';
 
 const MovieReducer = (movies = [], action) => {
   switch (action.type) {
     case FETCH_SUCCEDED:
-        console.log(action.recievedMovies)
-    //   return action.recievedMovies;
+      return movies.concat(action.recievedMovies)
     case FETCH_FAILED:
-      return [];
+      return {error:action.error};
+      case ARRAY_EMPTY:
+       return []
     default:
       return movies;
   }

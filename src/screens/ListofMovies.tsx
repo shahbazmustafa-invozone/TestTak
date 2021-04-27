@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, } from "react-native";
 import { useSelector, useDispatch } from "react-redux"
-import { fetchMoviesAction } from "../Redux/action/index";
+import { moviesList } from "../Redux/api/api";
+import { arrayEmptyAction } from "../Redux/action/index";
 
 export interface Props {
     navigation: {
@@ -10,64 +11,107 @@ export interface Props {
 }
 const ListofMovies: React.FC<Props> = (props) => {
     const [searchText, setSearchText] = useState("");
-    const [list, setList] = useState([{ id: 1 }, { id: 2 }, { id: 3 }])
-
+    const [pgNum, setPgNum] = useState(1)
+    const [listOfItems3, setListOfItems] = useState([{ name: "Rating", isSelected: true }, { name: "Title", isSeleted: false }, { name: "Date", isSelected: false }])
+    const [filter, setFilter] = useState("movieByRating")
+    const [selectedItem, setSelectedItem] = useState("movieByRating")
     const dispatch = useDispatch()
-    let movies = useSelector((state?: any) => state.movieReducer)
-    console.log("MOvies", movies)
     useEffect(() => {
-        
-        dispatch(fetchMoviesAction());
-        // fetch('https://d9945f1c49f9.ngrok.io/api/getMovies?page[number]=1', {
-        //     method: 'GET'
-        //  })
-        //  .then((response) => response.json())
-        //  .then((responseJson) => {
-        //     console.log(responseJson);
-        //  })
-        //  .catch((error) => {
-        //     console.error(error);
-        //  });
+        dispatch(moviesList(filter, pgNum))
     }, [])
+    let movies = useSelector((state?: any) => state)
+    // console.log("List of movies", movies.movieReducer)
 
     return (
         <View style={styles.mainView}>
+            <View style={styles.headingViewStyle}>
+                <Text style={styles.headingTextStyle}>Movies</Text>
+            </View>
             <View style={styles.inputStyle}>
                 <TextInput placeholder={'Search by Name or question'}
                     style={styles.inputFieldStyle}
                     value={searchText}
                     onChangeText={(text) => {
                         setSearchText(text)
+                        if (text.length > 0) {
+                            dispatch(arrayEmptyAction())
+                            dispatch(moviesList("movieSearch", pgNum, text))
+                        }
+                        else {
+                            dispatch(arrayEmptyAction())
+                            dispatch(moviesList(filter, pgNum))
+                        }
+
                     }} />
             </View>
-            <View style={styles.contentContainer}>
-                <View style={styles.headingViewStyle}>
-                    <Text style={styles.headingTextStyle}>Movies</Text>
-                </View>
-                <View style={styles.listContainer}>
-                    <FlatList
-                        numColumns={1}
-                        data={list}
-                        keyExtractor={(item, index) => index.toString()}
-                        extraData={{ list: list }}
-                        showsVerticalScrollIndicator={false}
-                        removeClippedSubviews={false}
-                        style={{ flex: 1, width: '100%' }}
-                        renderItem={({ item, index }) => {
-                            return (
-                                <View style={styles.outerContainerStyle}>
-                                    <TouchableOpacity style={styles.itemContainer}
-                                        onPress={() => { props.navigation.navigate("MovieDetail", { movieName: "Undisputed" }) }}>
-                                        <View style={styles.innerCOntainerStyle}>
-                                            <Text style={{ fontSize: 16, marginTop: 10, }}>{"Name"}</Text>
-                                            <Text style={{ fontSize: 12, marginTop: 5 }}>{"Votes"}</Text>
-                                            <Text style={{ fontSize: 13, marginBottom: 10, marginTop: 5, }}>{"get"}</Text>
+            <View style={{ flexDirection: "row", height: 30, marginHorizontal: 10 }}>
+                <TouchableOpacity style={[styles.filterViewStyle, { backgroundColor: "#e5e5e5", }]}
+                    onPress={() => {
+                        setSelectedItem("movieByRating")
+                        dispatch(arrayEmptyAction())
+                        setPgNum(1)
+                        setFilter("movieByRating")
+                        dispatch(moviesList("movieByRating", pgNum))
+                    }}>
+                    <Text style={{ fontSize: 16, color: selectedItem == "movieByRating" ? "white" : "black" }}>{"Rating"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.filterViewStyle, { backgroundColor: "#e5e5e5", }]}
+                    onPress={() => {
+                        setSelectedItem("movieByTitle")
+                        dispatch(arrayEmptyAction())
+                        setPgNum(1)
+                        setFilter("movieByTitle")
+                        dispatch(moviesList("movieByTitle", pgNum))
+                    }}>
+                    <Text style={{ fontSize: 16, color: selectedItem == "movieByTitle" ? "white" : "black" }}>{"Title"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.filterViewStyle, { backgroundColor: "#e5e5e5", }]}
+                    onPress={() => {
+                        setSelectedItem("movieByDate")
+                        dispatch(arrayEmptyAction())
+                        setPgNum(1)
+                        setFilter("movieByDate")
+                        dispatch(moviesList("movieByDate", pgNum))
+                    }}>
+                    <Text style={{ fontSize: 16, color: selectedItem == "movieByDate" ? "white" : "black" }}>{"Date"}</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.listContainer}>
+                <FlatList
+                    numColumns={1}
+                    data={movies.movieReducer}
+                    keyExtractor={(item, index) => index.toString()}
+                    extraData={{ list: movies.movieReducer }}
+                    showsVerticalScrollIndicator={false}
+                    removeClippedSubviews={false}
+                    style={{ width: '100%' }}
+                    onEndReachedThreshold={0.5}
+                    onEndReached={() => {
+                        setPgNum(pgNum + 1)
+                        dispatch(moviesList(filter, pgNum))
+                    }}
+                    renderItem={({ item, index }) => {
+                        return (
+                            <View style={styles.outerContainerStyle}>
+                                <TouchableOpacity style={styles.itemContainer}
+                                    onPress={() => { props.navigation.navigate("MovieDetail", { id:item.imdb_title_id }) }}>
+                                    <View style={styles.innerCOntainerStyle}>
+                                        <View style={styles.upperRowStyle}>
+                                            <Text style={{ fontSize: 16, }}>{item.title}</Text>
+                                            <Text style={{ fontSize: 16, }}>{item.votes}</Text>
                                         </View>
-                                    </TouchableOpacity>
-                                </View>
-                            )
-                        }} />
-                </View>
+                                        <Text style={{ fontSize: 13, marginTop: 5, }}>{item.director}</Text>
+                                        <Text style={{ fontSize: 13, marginTop: 5, }}>{item.genre}</Text>
+                                        <View style={styles.upperRowStyle}>
+                                            <Text style={{ fontSize: 12, }}>{"Year = " + item.year}</Text>
+                                            <Text style={{ fontSize: 12, }}>{"Duration = " + item.duration}</Text>
+                                            <Text style={{ fontSize: 12, }}>{"Average Votes = " + item.avg_vote}</Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+                        )
+                    }} />
             </View>
         </View>
     )
@@ -79,7 +123,7 @@ const styles = StyleSheet.create({
         backgroundColor: "white"
     },
     inputStyle: {
-        marginTop: 80,
+        marginTop: 20,
         marginBottom: 20,
         width: "100%",
         alignItems: "center",
@@ -91,13 +135,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderRadius: 5,
     },
-    contentContainer: {
-        flex: 1,
-        width: '100%',
-        alignItems: 'center',
-    },
+
     headingViewStyle: {
         width: "100%",
+        marginTop: 20,
         paddingHorizontal: 20
     },
     headingTextStyle: {
@@ -118,7 +159,7 @@ const styles = StyleSheet.create({
     innerCOntainerStyle: {
         flex: 1,
         height: '100%',
-        paddingLeft: 30
+        paddingHorizontal: 20
     },
     itemContainer: {
         flexDirection: 'row',
@@ -137,5 +178,16 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.34,
         shadowRadius: 6.27,
         elevation: 10,
+    },
+    filterViewStyle: {
+        paddingHorizontal: 35,
+        marginHorizontal: 10,
+        borderRadius: 20,
+        justifyContent: "center"
+    },
+    upperRowStyle: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 5,
     }
 })
